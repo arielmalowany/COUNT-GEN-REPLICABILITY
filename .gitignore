@@ -1,0 +1,18 @@
+# macOS junk
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Model and dataset folders
+384_shortcut1_inject1_none_hq/
+celeba_hq_dataset/
+data/
+mivolo_models/
+
+# Ignore contents of mivolo temp folders
+mivolo/.DS_Store
+mivolo/__pycache__/
+mivolo/data/__pycache__/
+mivolo/model/__pycache__/
