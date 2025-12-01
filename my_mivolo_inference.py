@@ -45,7 +45,7 @@ def get_parser():
 detector_weights = "./mivolo_models/yolov8x_person_face.pt"
 checkpoint =  "./mivolo_models/model_imdb_cross_person_4.22_99.46.pth.tar"
 device = "cpu"
-input = "/Users/arielmalowany/Desktop/Learning/COUNT-GEN/COUNT-GEN-REPLICABILITY/data/custom" 
+input = "./celeba_hq_dataset/CelebA-HQ-img" 
 
 parser = get_parser()
 args = parser.parse_args(

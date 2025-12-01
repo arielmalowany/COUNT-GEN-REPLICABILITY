@@ -116,7 +116,7 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
         # Begin Objectives
  
         code_difference = torch.sqrt(torch.sum((new_code - factual_code) ** 2))
-        pred_difference = torch.abs(self.desired_pred - new_pred)
+        pred_difference = torch.abs(self.desired_pred - new_pred) # 0.5 = 1 - x
         disc_difference = (d_real - d_fake) # > 0 better
 
         solution.objectives[0] = code_difference.float().item() #torch.sum(torch.abs(new_code - code)).float().item()

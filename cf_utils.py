@@ -19,11 +19,8 @@ import inspect
 # Helper functions (from COUNTGEN repo, adapted by me) 
 # Map images from (-1, 1) to (0, 1)
 
-def normalize_0_1(_img, fake = False):
-  if fake:
-    img = (_img - torch.min(_img))/(torch.max(_img) - torch.min(_img))
-  else:
-    img = (_img + 1)/(2)
+def normalize_0_1(_img):
+  img = (_img - torch.min(_img))/(torch.max(_img) - torch.min(_img))
   return img
 
 def denormalize(img):
@@ -250,15 +247,19 @@ def distances_between_image_sets(
                               training_set = None,
                               distance_metric = 'pixel_wise'
                             ):
-    tensor_img = transforms.functional.resize(tensor_img,[img_size, img_size]) # (B, C, H, W)
-    training_set = normalize_0_1(training_set) # normalize the training set to (0, 1)
+  
     batch_size = training_set.shape[0]
+  
+    if tensor_img.shape[2] != img_size:
+      tensor_img = transforms.functional.resize(tensor_img,[img_size, img_size]) # (B, C, H, W)
+    tensor_img = normalize_0_1(tensor_img)
     
-    if training_set.shape[1] != img_size:
-      training_set = transforms.functional.resize(training_set,[128, 128])
+    if training_set.shape[2] != img_size:
+      training_set = transforms.functional.resize(training_set,[img_size, img_size])
+    training_set = normalize_0_1(training_set)
     
     if distance_metric == 'pixel_wise':
-      d = torch.sqrt(torch.mean((tensor_img - training_set) ** 2, dim=[1, 2, 3]))
+      d = torch.sqrt(torch.mean((tensor_img - training_set) ** 2, dim=[1,2,3]))
     if distance_metric == 'lpips':
       lpips = LearnedPerceptualImagePatchSimilarity(net_type='alex', reduction='none', normalize = True)
       d = lpips(tensor_img.expand(batch_size, 3, img_size, img_size), training_set)
