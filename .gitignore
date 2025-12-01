@@ -16,3 +16,7 @@ mivolo/.DS_Store
 mivolo/__pycache__/
 mivolo/data/__pycache__/
 mivolo/model/__pycache__/
+
+# Counterfactual folder
+
+Counterfactuals/
