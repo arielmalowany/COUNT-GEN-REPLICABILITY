@@ -233,7 +233,7 @@ def hypervolume_indicator(pareto_front):
   objectives_array = np.array(objectives_list)
   objectives_array = (objectives_array - np.min(objectives_array, axis = 0)) / (np.max(objectives_array, axis = 0) - np.min(objectives_array, axis = 0))
 
-  hypervolume = HyperVolume(reference_point = [1, 1, 1]) # area de soluciones menores a esta referencia. por lo cual representa el peor caso
+  hypervolume = HyperVolume(reference_point = [1, 1, 1]) # area de soluciones menores a esta referencia. por lo cual representa el mejor caso
 
   h = hypervolume.compute(objectives_array)
   
@@ -288,7 +288,7 @@ def generate_text_explanations(base_atts, f_pred, cf_pred, class_name, att_f, at
   complete_explanation = f"You were originally predicted to be {f_pred * 100:.5f}% {class_name}, but now you are predicted to be {cf_pred * 100:.5f}% {class_name} due to the following changes: \n" + explanation
   print(complete_explanation)
   
-def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, desired_pred, pop_size, max_evals):
+def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, prediction_orig, desired_pred, pop_size, max_evals):
   existing_files = [f.replace('.pkl', '') for f in os.listdir('./Counterfactuals')]
   base_file_name = 'Front_' + img_file_name.replace('.jpg', '')
   i = 0
@@ -299,6 +299,7 @@ def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_att
     i += 1
   experiment_metadata = {
     "desired_pred":desired_pred, 
+    "original_pred":prediction_orig,
     "pop_size":pop_size, 
     "max_evals":max_evals,
     "algorithm_mutator":str(algorithm.mutation_operator),
