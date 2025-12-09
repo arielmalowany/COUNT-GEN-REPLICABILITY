@@ -15,6 +15,7 @@ from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 import torchvision.transforms as transforms
 import os
 import inspect
+from datetime import datetime
 
 # Helper functions (from COUNTGEN repo, adapted by me) 
 # Map images from (-1, 1) to (0, 1)
@@ -288,7 +289,7 @@ def generate_text_explanations(base_atts, f_pred, cf_pred, class_name, att_f, at
   complete_explanation = f"You were originally predicted to be {f_pred * 100:.5f}% {class_name}, but now you are predicted to be {cf_pred * 100:.5f}% {class_name} due to the following changes: \n" + explanation
   print(complete_explanation)
   
-def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, prediction_orig, desired_pred, pop_size, max_evals):
+def file_name_creator(img_file_name):
   existing_files = [f.replace('.pkl', '') for f in os.listdir('./Counterfactuals')]
   base_file_name = 'Front_' + img_file_name.replace('.jpg', '')
   i = 0
@@ -297,6 +298,10 @@ def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_att
     file_name = base_file_name + '_' + str(i)
     found_file = file_name in existing_files
     i += 1
+  return file_name
+
+def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, prediction_orig, desired_pred, pop_size, max_evals):
+  file_name = file_name_creator(img_file_name)
   experiment_metadata = {
     "desired_pred":desired_pred, 
     "original_pred":prediction_orig,
@@ -305,7 +310,8 @@ def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_att
     "algorithm_mutator":str(algorithm.mutation_operator),
     "algorithm_crossover":str(algorithm.crossover_operator),
     "algorithm_termination":str(algorithm.termination_criterion),
-    "problem_recipe":inspect.getsource(problem.evaluate)
+    "problem_recipe":inspect.getsource(problem.evaluate),
+    "experiment_timestamp": datetime.now()
     }
   with open('./Counterfactuals/' + file_name + '.pkl', 'wb') as f:
     pkl.dump(pareto_front, f, pkl.HIGHEST_PROTOCOL)
@@ -313,3 +319,50 @@ def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_att
     pkl.dump(factual_atts, f, pkl.HIGHEST_PROTOCOL)
     pkl.dump(runtime_in_seconds, f, pkl.HIGHEST_PROTOCOL)
     pkl.dump(experiment_metadata, f, pkl.HIGHEST_PROTOCOL)
+    
+    
+from typing import List, TypeVar
+import logging
+from jmetal.core.observer import Observer
+
+S = TypeVar("S")
+
+LOGGER = logging.getLogger("jmetal")
+      
+class HyperVolumeObserver(Observer):
+    def __init__(self, frequency: int = 1, img_file_name:str = None) -> None:
+        """Show the number of evaluations, the best HIV and the computing time.
+        :param frequency: Display frequency."""
+
+        self.display_frequency = frequency
+        self.hv_history = []
+        self.eval_history = []
+        self.plot_path = './Counterfactuals/' + file_name_creator(img_file_name) + '.png'
+        
+    def update(self, *args, **kwargs):
+        computing_time = kwargs["COMPUTING_TIME"]
+        evaluations = kwargs["EVALUATIONS"] # counter
+        solutions = kwargs["SOLUTIONS"] 
+        
+        if (evaluations % self.display_frequency) == 0 and solutions:
+            
+            hv = hypervolume_indicator(solutions)
+            
+            LOGGER.info(
+                "Evaluations: {} \n HyperVolume: {} \n Computing time: {}".format(evaluations, hv, computing_time)
+            )
+            
+            self.hv_history.append(hv)
+            self.eval_history.append(evaluations)
+            self._save_plot()
+            
+    def _save_plot(self):
+        plt.figure(figsize=(8, 5))
+        plt.plot(self.eval_history, self.hv_history, marker="o")
+        plt.xlabel("Evaluations")
+        plt.ylabel("HyperVolume")
+        plt.title("HV Curve Over Time")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(self.plot_path)
+        plt.close()
