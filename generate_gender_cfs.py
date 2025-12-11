@@ -42,7 +42,7 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
         """
         self._number_of_variables = number_of_variables
         self._number_of_objectives = 3
-        self._number_of_constraints = 0
+        self._number_of_constraints = 1
 
         self.obj_directions = [self.MINIMIZE] * self._number_of_objectives
         self.obj_labels = ['$ f_{} $'.format(i) for i in range(self._number_of_objectives)]
@@ -71,7 +71,7 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
 
         self.factual_image = image.detach()
         self.factual_code = code.detach()
-        self.factual_disc_score = original_discriminator_score.detach()
+        self.factual_disc_score = original_discriminator_score
         self.factual_pred = original_pred
         self.desired_pred = torch.tensor(desired_pred)
         
@@ -114,14 +114,17 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
           d_fake = lpips(factual_image, new_image).item()
           
         # Begin Objectives
- 
-        code_difference = torch.sqrt(torch.sum((new_code - factual_code) ** 2))
-        pred_difference = torch.abs(self.desired_pred - new_pred) # 0.5 = 1 - x
-        disc_difference = (d_real - d_fake) # > 0 better
+        
+        if new_pred == np.inf:
+          solution.constraints = [1.0]
+        else: 
+          code_difference = torch.sqrt(torch.sum((new_code - factual_code) ** 2))
+          pred_difference = torch.abs(self.desired_pred - new_pred) # 0.5 = 1 - x
+          disc_difference = (d_real - d_fake) # > 0 better
 
-        solution.objectives[0] = code_difference.float().item() #torch.sum(torch.abs(new_code - code)).float().item()
-        solution.objectives[1] = pred_difference.float().item() # minimize the new score for the base class
-        solution.objectives[2] = np.abs(disc_difference).item() # maximize the gan score for the fake image
+          solution.objectives[0] = code_difference.float().item() #torch.sum(torch.abs(new_code - code)).float().item()
+          solution.objectives[1] = pred_difference.float().item() # minimize the new score for the base class
+          solution.objectives[2] = np.abs(disc_difference).item() # maximize the gan score for the fake image
         
         # End Objectives
 
