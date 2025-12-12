@@ -116,7 +116,11 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
         # Begin Objectives
         
         if new_pred == np.inf:
-          solution.constraints = [1.0]
+          solution.constraints[0] = -1.0
+          solution.objectives[0] = np.inf
+          solution.objectives[1] = np.inf
+          solution.objectives[2] = np.inf
+          return solution
         else: 
           code_difference = torch.sqrt(torch.sum((new_code - factual_code) ** 2))
           pred_difference = torch.abs(self.desired_pred - new_pred) # 0.5 = 1 - x
@@ -129,5 +133,6 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
         # End Objectives
 
         solution.counterfactualImage = new_image # Tensor directo del decoder
+        solution.counterfactualAttributes = new_code
         
         return solution

@@ -230,7 +230,8 @@ def plot_fig_from_paper(x_data, y_data, z_data, image_data, valid_cf_n, n_row = 
 def hypervolume_indicator(pareto_front):
   objectives_list = []
   for sol in pareto_front:
-    objectives_list.append(sol.objectives)
+    if sol.counterfactualAttributes != {}:
+      objectives_list.append(sol.objectives)
   objectives_array = np.array(objectives_list)
   objectives_array = (objectives_array - np.min(objectives_array, axis = 0)) / (np.max(objectives_array, axis = 0) - np.min(objectives_array, axis = 0))
 
