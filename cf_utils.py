@@ -16,6 +16,7 @@ import torchvision.transforms as transforms
 import os
 import inspect
 from datetime import datetime
+from jmetal.util.termination_criterion import TerminationCriterion
 
 # Helper functions (from COUNTGEN repo, adapted by me) 
 # Map images from (-1, 1) to (0, 1)
@@ -301,13 +302,14 @@ def file_name_creator(img_file_name):
     i += 1
   return file_name
 
-def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, prediction_orig, desired_pred, pop_size, max_evals):
+def write_pkl_file(img_file_name, algorithm, problem, factual_image, factual_atts, pareto_front, runtime_in_seconds, prediction_orig, desired_pred, pop_size, max_evals, evals):
   file_name = file_name_creator(img_file_name)
   experiment_metadata = {
     "desired_pred":desired_pred, 
     "original_pred":prediction_orig,
     "pop_size":pop_size, 
     "max_evals":max_evals,
+    "elapsed_evals":evals,
     "algorithm_mutator":str(algorithm.mutation_operator),
     "algorithm_crossover":str(algorithm.crossover_operator),
     "algorithm_termination":str(algorithm.termination_criterion),
@@ -367,3 +369,31 @@ class HyperVolumeObserver(Observer):
         plt.tight_layout()
         plt.savefig(self.plot_path)
         plt.close()
+
+class StoppingByHV(TerminationCriterion):
+    def __init__(self, expected_value: float, max_steps: int, max_evaluations: int):
+        super(StoppingByHV, self).__init__()
+        self.expected_value = expected_value
+        self.max_evaluations = max_evaluations
+        self.max_steps = max_steps
+        self.hv_history = [1]
+        self.steps = 0
+        
+    def update(self, *args, **kwargs):
+        solutions = kwargs["SOLUTIONS"]
+        self.evaluations = kwargs["EVALUATIONS"]
+
+        if solutions:
+            hv = hypervolume_indicator(solutions)
+            self.hv_history.append(hv)
+
+    @property
+    def is_met(self):
+       abs_epsilon = np.abs(self.hv_history[-1]/self.hv_history[-2] - 1)
+       if abs_epsilon < self.expected_value:
+         self.steps += 1
+       else:
+         self.steps = 0
+       if self.evaluations > self.max_evaluations or self.steps > self.max_steps:
+         met = True
+         return met
