@@ -1,4 +1,4 @@
-# COUNT-GEN Replicability: Explicaciones contrafactuales multi-objetivo para clasificadores binarios de imágenes: un marco de generación y evaluación
+# Explicaciones contrafactuales multi-objetivo para clasificadores binarios de imágenes: un marco de generación y evaluación
 
 Implementación experimental desarrollada como parte de la Tesis presentada a la Facultad de Ingeniería de la Universidad de la República por Ariel Malowany, en cumplimiento parcial de los requerimientos para la obtención del título de Magister en Ciencia de Datos y Aprendizaje Automático. El proyecto replica y extiende la metodología de generación de explicaciones contrafactuales multi-objetivo propuesta por Del Ser et al. (2024), aplicada a la clasificación de género sobre imágenes de rostros humanos.
 
