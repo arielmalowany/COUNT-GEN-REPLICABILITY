@@ -7,9 +7,16 @@ __pycache__/
 
 # Model and dataset folders
 384_shortcut1_inject1_none_hq/
+384_shortcut1_inject0_none_hq/
 celeba_hq_dataset/
 data/
 mivolo_models/
+celeba/
+classifier_model.h5
+discriminative_power_results.csv
+discriminative_power_results_lpips.xlsx
+discriminative_power_results_pixel_wise.xlsx
+graficos/
 
 # Ignore contents of mivolo temp folders
 mivolo/.DS_Store
@@ -20,3 +27,5 @@ mivolo/model/__pycache__/
 # Counterfactual folder
 
 Counterfactuals/
+
+	

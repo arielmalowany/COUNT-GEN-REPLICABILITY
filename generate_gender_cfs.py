@@ -47,8 +47,8 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
         self.obj_directions = [self.MINIMIZE] * self._number_of_objectives
         self.obj_labels = ['$ f_{} $'.format(i) for i in range(self._number_of_objectives)]
 
-        self.lower_bound = number_of_variables * [-1.0]
-        self.upper_bound = number_of_variables * [1.0]
+        self.lower_bound = [-1.0] * number_of_variables
+        self.upper_bound = [1.0] * number_of_variables
         
         if non_actionable_features is not None:
           for att in non_actionable_features:
@@ -122,7 +122,7 @@ class AttGanPlausibleCounterfactualProblem(FloatProblem):
           solution.objectives[2] = np.inf
           return solution
         else: 
-          code_difference = torch.sqrt(torch.sum((new_code - factual_code) ** 2))
+          code_difference = torch.sum(torch.abs(new_code - factual_code)) #torch.sqrt(torch.sum((new_code - factual_code) ** 2)) 
           pred_difference = torch.abs(self.desired_pred - new_pred) # 0.5 = 1 - x
           disc_difference = (d_real - d_fake) # > 0 better
 
